@@ -56,10 +56,12 @@ def QuadsSet(value):
 			caput(q2_cset, 0, wait=True, timeout=60)			
 	else:
 		print("Quads are not on.")
+
 def AttIn():
 	caput(attn10_in, 0, wait=True, timeout=60)
 	caput(attn100_in, 0, wait=True, timeout=60)
 	#add some line that double checks that they're in successfully
+
 def AttOut():
 	caput(attn10_out, 0, wait=True, timeout=60)
 	caput(attn100_out, 0, wait=True, timeout=60)
@@ -77,6 +79,7 @@ def SaveIm():
  	print('Screenshot obtained')
         sleep(2)
 	return filename
+
 #def GetBeamPos():
 	#run viewer code
 	#import text with results

@@ -1,11 +1,9 @@
-#Centering w/ no multipoles routine
 from time import *
-from cothread.catools import caget, caput
-import setup.py
 
+from epics import caget, caput, cainfo
 
-if(caget(vd1542_atloc) == 1):
-    
+if( not (caget('SCR_BTS35:SLL_D1638') == 77)):
+    print("Viewer is not in.")
 
 while 1:
     try:
@@ -17,7 +15,7 @@ while 1:
             caput('SCR_BTS35:FC_D1485:IN_CMD', 0, wait=True, timeout=60)   #takes out cup
 	    
             sleep(30)
-            caput('SCR_BTS35:VD_D1542:TIFF1:WriteFile', 1, wait=True, timeout=10)   #takes screenshot
+            caput('SCR_BTS35:VD_D1638:TIFF1:WriteFile', 1, wait=True, timeout=10)   #takes screenshot
  	    print('Screenshot obtained')
             sleep(2)
 
@@ -27,9 +25,10 @@ while 1:
         else:
             print('Beam is blocked.')
     
-        sleep(60)    #takes screenshot every 1 minute
+        delay = 5
+
+        sleep( delay * 60 )    #takes screenshot every [delay] minute(s)
 
     except:
         print('Error - waiting 30 s and trying again')
         sleep(30)
-

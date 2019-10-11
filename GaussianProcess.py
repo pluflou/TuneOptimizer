@@ -22,10 +22,10 @@ eps = float(sys.argv[1]) # Acquisition function (probability of improvement) par
 num_points = 100000 # Number of points to sample when using PI to find the next corrector values
 
 # Phase-space range when PI sampling: 
-c1 = [-20,20] # Range in Amps for 1413H 
-c2 = [-20,-20] # Range in Amps for 1413V 
-c3 = [-20,-20] # Range in Amps for 1431H 
-c4 = [-20,-20] # Range in Amps for 1431V 
+c1 = [-70,70] # Range in Amps for 1413H 
+c2 = [-70,70] # Range in Amps for 1413V 
+c3 = [-70,70] # Range in Amps for 1431H 
+c4 = [-70,70] # Range in Amps for 1431V 
 
 #PV names for correctors
 h13_cset= 'REA_BTS34:DCH_D1413:I_CSET'

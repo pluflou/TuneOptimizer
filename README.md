@@ -1,8 +1,8 @@
 # TuneOptimizer
-Automated algorithm using cothread module and EPICS to optimize tune through SECAR
+Automated algorithm using the PyEpics package to communicate with the control system, to optimize tuning through SECAR using a Gaussian process.
 
-This is still under construction. Upon completion, the code will:
-1. Communicate with EPICS through caget and caput to move/read devices along the beamline
-2. Analyze the data from the viewer (see [viewer repo](https://github.com/pluflou/Viewer-Image-Analysis)) to locate beam
-3. Use that data plus readings from cups and apertures to decide which element to modify/which direction to go in order to converge towards the best tune
-4. The optimal tune is reached once the method minimizes the aperture readings while maximizing transmission (readings on cups), and keeping the beam on the viewer from steering more than ~5 mm
+Analysis from image processing (see [viewer repo](https://github.com/pluflou/Viewer-Image-Analysis)) to locate beam
+is used as observations for the optimization.
+
+The algorithms has been tested and shown to work for efficient tuning of the beamline. Currently under further development during the recoil separator's commissioning to improve method and extend to further elements of the device.
+

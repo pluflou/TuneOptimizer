@@ -16,16 +16,16 @@ from epics import caput
 # from Figures import *
 
 # Hyper-parameters
-theta = 0.5 # Kernel parameter
+theta = float(sys.argv[2]) # Kernel parameter
 eps = float(sys.argv[1]) # Acquisition function (probability of improvement) parameter
 #eps = 0.05 # Acquisition function (probability of improvement) parameter
 num_points = 100000 # Number of points to sample when using PI to find the next corrector values
 
 # Phase-space range when PI sampling: 
-c1 = [-70,70] # Range in Amps for 1413H 
-c2 = [-70,70] # Range in Amps for 1413V 
-c3 = [-70,70] # Range in Amps for 1431H 
-c4 = [-70,70] # Range in Amps for 1431V 
+c1 = [-10,10] # Range in Amps for 1413H 
+c2 = [-10,10] # Range in Amps for 1413V 
+c3 = [-10,10] # Range in Amps for 1431H 
+c4 = [-10,10] # Range in Amps for 1431V 
 
 #PV names for correctors
 h13_cset= 'REA_BTS34:DCH_D1413:I_CSET'
@@ -89,7 +89,7 @@ def samplePI(num_points) :
             PImax = PIx
             xPImax = x
     f = open('temp-sampling.txt','a') 	# Writing to sampling file best case
-    f.write( '{0: .6f} {1:.6f} {2:.6f} {3:.6f} {4:.6f} \n' .format(xPImax[0,0], xPImax[1,0], xPImax[2,0], xPImax[3,0], PImax) )
+    f.write( '{0: .6f}\t{1:.6f}\t{2:.6f}\t{3:.6f}\t{4:.6f} \n' .format(xPImax[0,0], xPImax[1,0], xPImax[2,0], xPImax[3,0], PImax) )
     return 0
 
 

@@ -1,5 +1,5 @@
 # TuneOptimizer
-Automated algorithm using the PyEpics package to communicate with the control system, to optimize tuning through SECAR using a Gaussian process.
+Automated algorithm using the PyEpics package to communicate with the control system, to optimize tuning through SECAR using a Bayesian Gaussian process optimization.
 
 Analysis from image processing (see [viewer repo](https://github.com/pluflou/Viewer-Image-Analysis)) to locate beam
 is used as observations for the optimization.

@@ -1,14 +1,17 @@
-import numpy as np
-import gaussianprocess as gp
-from time import *
-from setup import *
-from epics import caput
-import sys, math
 import os, shutil, signal
+import sys, math
+
 import subprocess as commands
 import re
+import random
 import multiprocessing
 import itertools
+import numpy as np
+from epics import caput
+
+import gaussianprocess as gp
+from time import sleep
+from setup import GetBeamPos, GetQuad, SetQuad, SaveIm
 
 ## if in troubleshoot mode you can change the eps at every step
 tbl = 'n'
@@ -26,44 +29,57 @@ eps_stable = input("Enter eps (prob. of improvement): ")
 #getting list of quads to loop through
 quad_list = [x.lstrip().rstrip() for x in quad_list.split(",")]
 
-#get init values for each quad
-#set ps for each quad here         #take range of fine tuning as +/- 15% of init value
+
+q_init = {}
+q_ps = {}
 
 for q in quad_list:
 
     cont = 'y'
+	print("Starting {q} optimization.")
+
+	#get init values for each quad
+	q_init[q] = GetQuad(q)
+	#initialize phase space as +/- 15% of init value
+	q_ps[q] = [ 0.85*q_init[q] , 1.15*q_init[q] ]
+
+	#take picture at init values
+	init_im = SaveIm('init')
+	sleep(2)
+
+	#get initial beam spot width
+	pos_init = GetBeamPos(init_im, viewer)
+
+	#widths (+/- 34.13%)
+    wid_init = 1/(pos_init[5] - pos_init[4])
+
+	#write inital value to file
+	f= open(f"{q}Values_Widths.txt", "a+")
+	f.write(f'{q_init[q]:.4f}\t{wid_init:.4f}\n')
+	f.close()
 
     while (cont == 'y' and count<11):
 	
-	    #import current state
-	    #Get initial quad values
-	    q_init = GetQuad() #am i guetting the rd or the cset?
+	    #selecting a random new state
+		rand = random.uniform(q_ps[q][0], q_ps[q][1])
 
-	    #Tuning quad
-	    #take picture at init values
-	    SetQuad(rand from ps )
+	    #set quad to new random current and get new width
+	    SetQuad(q, rand) 
 	    sleep(10)
 	    rand_im= SaveIm('rand') #dont I need init width first?? need to run this once... 
 	    sleep(2)
 
-	    pos= GetBeamPos(rand_im, viewer)
+	    pos_rand = GetBeamPos(rand_im, viewer)
 
-
-        #peaks
-	    pk_ = pos[2:4]
-        #median centroid positions
-	    med = pos[0:2]
         #widths (+/- 34.13%)
-        wid = 1/(pos[5] - pos[4])
+        wid_rand = 1/(pos_rand[5] - pos_rand[4])
 
-	    print("Centroid: ", med)
-	    print("Width: ", 1/wid)
+	    print("Init Width: ", 1/wid_init)
+		print("New Width: ", 1/wid_rand)
 
 	    #save currents and width values to file
 	    f= open(f"{q}Values_Widths.txt", "a+")
-	    f.write(f'{q_init:.4f}\t{wid_1:.4f}\n') #?????????????
-        f.write(f'{rand:.4f}\t{wid_2:.4f}\n')
-
+        f.write(f'{rand:.4f}\t{wid_rand:.4f}\n')
 	    f.close()
 
 	    #run GP 
@@ -108,9 +124,8 @@ for q in quad_list:
 	    PIreader = np.asmatrix(np.loadtxt('temp-sampling.txt'))
 	    x = np.transpose(np.asmatrix( PIreader[ np.argmax([ x[:,1] for x in PIreader] ), 0] ))
 
-	    print(f"New {q} value: ", x)
+	    print(f"New {q} current value: ", x)
     
-
 	    #save new quad value to file
 	    f= open(f"new{q}Value.txt", "a+")
 	    new_c = float(x)
@@ -118,7 +133,7 @@ for q in quad_list:
 	    f.close()
 
 	    #set quad to new value
-	    caput(q_cset, new_c, wait= True)
+	    SetQuad(q, new_c)
 	    print(f"{q} set.")
 
         ####################
@@ -133,6 +148,8 @@ for q in quad_list:
 		    cont = input("Continue with same quad? y/n ")
 
 print(f"All {len(quad_list)} quads optimized.")
-#need a way to select best tune (max 1/width) from results 
-#then for each check if (init (first val) - best tune)>0.01%, if yes, count quad and save diff
-# for each quad that was different, divide diff by count and add to init, then set to that value
+
+
+#select max 1/width from results 
+#check if (init (first val) - best tune current)>0.01%, if yes, count quad and save diff
+#for each quad that was different, divide diff by count and add to init, then set to that value

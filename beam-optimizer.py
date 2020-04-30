@@ -1,16 +1,19 @@
+import os, shutil, signal
+import sys, math
+
+import subprocess as commands
+import re
+import multiprocessing
+import itertools
 import numpy as np
+from epics import caput
+
 import gaussianprocess as gp
 from time import sleep
 from setup import GetBeamPos, GetCorr, GetQuads, SetQuads, SaveIm, Dist
 from setup import h13_cset, h13_ird, h31_cset, h31_ird
 from setup import v13_cset, v13_ird, v31_cset, v31_ird
-from epics import caput
-import sys, math
-import os, shutil, signal
-import subprocess as commands
-import re
-import multiprocessing
-import itertools
+
 
 cont = 'y'
 ## if in troubleshoot mode you can change the eps at every step
@@ -24,7 +27,7 @@ print("Make sure to delete the past corrector text files.")
 theta = input("Enter theta (kernel param): ")
 eps_stable = input("Enter eps (prob. of improvement): ")
 
-viewer = 'D1542'
+viewer = 'D1542' #when optimizing through JENSA we always use this viewer
 
 # Phase-space range when PI sampling: 
 ps1 = [-10,10] # Range in Amps for 1413H 

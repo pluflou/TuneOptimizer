@@ -21,40 +21,23 @@ v31_ird='REA_BTS34:DCV_D1431:I_RD'
 
 #############
 ### quads  ##
-q1_cset= 'SCR_BTS35:PSQ_D1475:I_CSET'
-q2_cset= 'SCR_BTS35:PSQ_D1479:I_CSET'
-q3_cset= 'SCR_BTS35:PSQ_D1525:I_CSET'
-q4_cset= 'SCR_BTS35:PSQ_D1532:I_CSET'
-
-#q1,q2,q4,q5,q6,q7,q8,q9,q10,q11,q12 = 
-q5_cset= 'SCR_BTS35:PSQ_D1538:I_CSET'
-q6_cset= 'SCR_BTS35:PSQ_D1572:I_CSET'
-q7_cset= 'SCR_BTS35:PSQ_D1578:I_CSET'
-q8_cset= 'SCR_BTS35:PSQ_D1648:I_CSET'
-q9_cset= 'SCR_BTS35:PSQ_D1655:I_CSET'
-q10_cset= 'SCR_BTS35:PSQ_D1692:I_CSET'
-q11_cset= 'SCR_BTS35:PSQ_D1701:I_CSET'
-q12_cset= 'SCR_BTS35:PSQ_D1787:I_CSET'
-q13_cset= 'SCR_BTS35:PSQ_D1793:I_CSET'
-q14_cset= 'SCR_BTS35:PSQ_D1842:I_CSET'
-q15_cset= 'SCR_BTS35:PSQ_D1850:I_CSET'
-
-##Read currents##
-q1_ird= 'SCR_BTS35:PSQ_D1475:I_RD'
-q2_ird= 'SCR_BTS35:PSQ_D1479:I_RD'
-q3_ird= 'SCR_BTS35:PSQ_D1525:I_RD'
-q4_ird= 'SCR_BTS35:PSQ_D1532:I_RD'
-q5_ird= 'SCR_BTS35:PSQ_D1538:I_RD'
-q6_ird= 'SCR_BTS35:PSQ_D1572:I_RD'
-q7_ird= 'SCR_BTS35:PSQ_D1578:I_RD'
-q8_ird= 'SCR_BTS35:PSQ_D1648:I_RD'
-q9_ird= 'SCR_BTS35:PSQ_D1655:I_RD'
-q10_ird= 'SCR_BTS35:PSQ_D1692:I_RD'
-q11_ird= 'SCR_BTS35:PSQ_D1701:I_RD'
-q12_ird= 'SCR_BTS35:PSQ_D1787:I_RD'
-q13_ird= 'SCR_BTS35:PSQ_D1793:I_RD'
-q14_ird= 'SCR_BTS35:PSQ_D1842:I_RD'
-q15_ird= 'SCR_BTS35:PSQ_D1850:I_RD'
+q_loc = {
+'q1': '1475',
+'q2':'1479',
+'q3':'1525',
+'q4':'1532',
+'q5':'1538',
+'q6':'1572',
+'q7':'1578',
+'q8':'1648',
+'q9':'1655',
+'q10':'1692',
+'q11':'1701',
+'q12':'1787',
+'q13':'1793',
+'q14':'1842',
+'q15':'1850'
+}
 
 ###########
 ##dipoles##
@@ -92,27 +75,19 @@ b2_cpstm = caget('SCR_BTS35:PSD_D1504:CYCL_PSTM')
 set_image_name= 'SCR_BTS35:VD_D1542:TIFF1:FileName'
 write_image= 'SCR_BTS35:VD_D1542:TIFF1:WriteFile'
 
-def GetQuads():
 
-    '''Gets current quad values'''
+def GetQuad(quad):
 
-    q1= caget(q1_ird)
-    q2= caget(q2_ird)
-    q3= caget(q3_ird)
-    q4= caget(q4_ird)
-    return q1, q2, q3, q4
+    '''Takes any quad name and returns its current readback value'''
+
+    return caget(f'SCR_BTS35:PSQ_D{q_loc[quad]}:I_RD')
 
 
-def SetQuads(v1, v2, v3, v4):
+def SetQuad(quad, current):
 
-    '''Set quads to new value'''
+    '''Takes any quad name and current value and sets the value to the PS'''
 
-    caput(q1_cset, v1, wait= True)
-    caput(q2_cset, v2, wait= True)
-    caput(q3_cset, v3, wait= True)
-    caput(q4_cset, v4, wait= True)
-    print("Quads set.")
-
+    return caput(f'SCR_BTS35:PSQ_D{q_loc[quad]}:I_CSET', current, wait= True)
 
 def GetCorr():
 
@@ -226,19 +201,40 @@ def cycleB1B2():
     print("Done cycling.")
 
 
+### functions that need to be obsolete/updated, only used in beam-optimizer, not general ###
 
+### quads  ##
+q1_cset= 'SCR_BTS35:PSQ_D1475:I_CSET'
+q2_cset= 'SCR_BTS35:PSQ_D1479:I_CSET'
+q3_cset= 'SCR_BTS35:PSQ_D1525:I_CSET'
+q4_cset= 'SCR_BTS35:PSQ_D1532:I_CSET'
 
+##Read currents##
+q1_ird= 'SCR_BTS35:PSQ_D1475:I_RD'
+q2_ird= 'SCR_BTS35:PSQ_D1479:I_RD'
+q3_ird= 'SCR_BTS35:PSQ_D1525:I_RD'
+q4_ird= 'SCR_BTS35:PSQ_D1532:I_RD'
 
+def SetQuads(v1, v2, v3, v4):
 
+    '''Set quads to new value'''
 
+    caput(q1_cset, v1, wait= True)
+    caput(q2_cset, v2, wait= True)
+    caput(q3_cset, v3, wait= True)
+    caput(q4_cset, v4, wait= True)
+    print("Quads set.")
 
+def GetQuads():
 
+    '''Gets current readback values for the first 4 quads only.
+    Initially defined for use with the beam tuner through JENSA'''
 
-
-
-
-
-
+    q1= caget(q1_ird)
+    q2= caget(q2_ird)
+    q3= caget(q3_ird)
+    q4= caget(q4_ird)
+    return q1, q2, q3, q4
 
 
 

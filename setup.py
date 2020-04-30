@@ -1,32 +1,62 @@
 #Setup of PVs and defined functions for optimizer
 import datetime
-from time import *
+from time import sleep
 import os
 import numpy as np
 from epics import caget, caput, cainfo
 
 cont = 'yes'
 
-##Set currents##
-q1_cset= 'SCR_BTS35:PSQ_D1475:I_CSET'
-q2_cset= 'SCR_BTS35:PSQ_D1479:I_CSET'
-q3_cset= 'SCR_BTS35:PSQ_D1525:I_CSET'
-q4_cset= 'SCR_BTS35:PSQ_D1532:I_CSET'
+## correctors ##
 h13_cset= 'REA_BTS34:DCH_D1413:I_CSET'
 v13_cset='REA_BTS34:DCV_D1413:I_CSET'
 h31_cset= 'REA_BTS34:DCH_D1431:I_CSET'
 v31_cset= 'REA_BTS34:DCV_D1431:I_CSET'
+
+h13_ird='REA_BTS34:DCH_D1413:I_RD'
+v13_ird='REA_BTS34:DCV_D1413:I_RD'
+h31_ird='REA_BTS34:DCH_D1431:I_RD'
+v31_ird='REA_BTS34:DCV_D1431:I_RD'
+
+
+#############
+### quads  ##
+q1_cset= 'SCR_BTS35:PSQ_D1475:I_CSET'
+q2_cset= 'SCR_BTS35:PSQ_D1479:I_CSET'
+q3_cset= 'SCR_BTS35:PSQ_D1525:I_CSET'
+q4_cset= 'SCR_BTS35:PSQ_D1532:I_CSET'
+
+#q1,q2,q4,q5,q6,q7,q8,q9,q10,q11,q12 = 
+q5_cset= 'SCR_BTS35:PSQ_D1538:I_CSET'
+q6_cset= 'SCR_BTS35:PSQ_D1572:I_CSET'
+q7_cset= 'SCR_BTS35:PSQ_D1578:I_CSET'
+q8_cset= 'SCR_BTS35:PSQ_D1648:I_CSET'
+q9_cset= 'SCR_BTS35:PSQ_D1655:I_CSET'
+q10_cset= 'SCR_BTS35:PSQ_D1692:I_CSET'
+q11_cset= 'SCR_BTS35:PSQ_D1701:I_CSET'
+q12_cset= 'SCR_BTS35:PSQ_D1787:I_CSET'
+q13_cset= 'SCR_BTS35:PSQ_D1793:I_CSET'
+q14_cset= 'SCR_BTS35:PSQ_D1842:I_CSET'
+q15_cset= 'SCR_BTS35:PSQ_D1850:I_CSET'
 
 ##Read currents##
 q1_ird= 'SCR_BTS35:PSQ_D1475:I_RD'
 q2_ird= 'SCR_BTS35:PSQ_D1479:I_RD'
 q3_ird= 'SCR_BTS35:PSQ_D1525:I_RD'
 q4_ird= 'SCR_BTS35:PSQ_D1532:I_RD'
-h13_ird='REA_BTS34:DCH_D1413:I_RD'
-v13_ird='REA_BTS34:DCV_D1413:I_RD'
-h31_ird='REA_BTS34:DCH_D1431:I_RD'
-v31_ird='REA_BTS34:DCV_D1431:I_RD'
+q5_ird= 'SCR_BTS35:PSQ_D1538:I_RD'
+q6_ird= 'SCR_BTS35:PSQ_D1572:I_RD'
+q7_ird= 'SCR_BTS35:PSQ_D1578:I_RD'
+q8_ird= 'SCR_BTS35:PSQ_D1648:I_RD'
+q9_ird= 'SCR_BTS35:PSQ_D1655:I_RD'
+q10_ird= 'SCR_BTS35:PSQ_D1692:I_RD'
+q11_ird= 'SCR_BTS35:PSQ_D1701:I_RD'
+q12_ird= 'SCR_BTS35:PSQ_D1787:I_RD'
+q13_ird= 'SCR_BTS35:PSQ_D1793:I_RD'
+q14_ird= 'SCR_BTS35:PSQ_D1842:I_RD'
+q15_ird= 'SCR_BTS35:PSQ_D1850:I_RD'
 
+###########
 ##dipoles##
 #nmr probes
 set_probe = 'SCR_BTS35:NMR1_D1489:PRB_CSET'
@@ -36,6 +66,7 @@ lock_status = caget('SCR_BTS35:NMR_N0001:LOCK_RSTS')
 #power supplies
 b1_icset = 'SCR_BTS35:PSD_D1489:I_CSET'
 b2_icset = 'SCR_BTS35:PSD_D1504:I_CSET'
+
 b1_ird = 'SCR_BTS35:PSD_D1489:I_RD'
 b2_ird = 'SCR_BTS35:PSD_D1504:I_RD'
 
@@ -54,6 +85,7 @@ b2_iters = caget('SCR_BTS35:PSD_D1504:CYCL_ITERS')
 b2_cpstm = caget('SCR_BTS35:PSD_D1504:CYCL_PSTM')
 
 
+##########
 ##Status##  #should probably complete this later
 
 ##Viewer Actions##
@@ -115,12 +147,12 @@ def SaveIm(tunename):
     print(f"Screenshot {tunename} obtained")
     return filename
 
-def GetBeamPos(imname):
+def GetBeamPos(imname, v_loc):
 
     '''Run viewer image analysis code to get centroids'''
 
     #run viewer code
-    os.system(f"python3 /user/e18514/Documents/viewer-image-analysis/src/im_analysis.py /mnt/daqtesting/secar_camera/new_captures/{imname}_000.tiff")
+    os.system(f"python3 /user/e18514/Documents/viewer-image-analysis/src/im_analysis.py /mnt/daqtesting/secar_camera/new_captures/{imname}_000.tiff {v_loc}")
     #import text with results
     data= np.loadtxt(f"/user/e18514/Documents/viewer-image-analysis/output/optimizer/BeamLoc_{imname}_000.csv")
     #read x and y in mm
@@ -129,8 +161,11 @@ def GetBeamPos(imname):
 
     x_peak= data[6]
     y_peak= data[7]
-    #return (x, y)
-    return x_centroid, y_centroid, x_peak, y_peak
+
+    x_nsig= data[8]
+    x_psig= data[9]
+
+    return x_centroid, y_centroid, x_peak, y_peak, x_nsig, x_psig
 
 def Dist(p1, p2, p3, p4):
 

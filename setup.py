@@ -5,24 +5,10 @@ import os
 import numpy as np
 from epics import caget, caput, cainfo
 
-cont = 'yes'
-
-## correctors ##
-h13_cset= 'REA_BTS34:DCH_D1413:I_CSET'
-v13_cset='REA_BTS34:DCV_D1413:I_CSET'
-h31_cset= 'REA_BTS34:DCH_D1431:I_CSET'
-v31_cset= 'REA_BTS34:DCV_D1431:I_CSET'
-
-h13_ird='REA_BTS34:DCH_D1413:I_RD'
-v13_ird='REA_BTS34:DCV_D1413:I_RD'
-h31_ird='REA_BTS34:DCH_D1431:I_RD'
-v31_ird='REA_BTS34:DCV_D1431:I_RD'
-
-
 #############
 ### quads  ##
 q_loc = {
-'q1': '1475',
+'q1':'1475',
 'q2':'1479',
 'q3':'1525',
 'q4':'1532',
@@ -41,6 +27,28 @@ q_loc = {
 
 ###########
 ##dipoles##
+b_loc = {
+'b1':'1489',
+'b2':'1504',
+'b3':'1525', ###TO BE COMPLETED
+'b4':'1532',
+'b5':'1538',
+'b6':'1572',
+'b7':'1578',
+'b8':'1648',
+}
+
+#correctors 
+h13_cset= 'REA_BTS34:DCH_D1413:I_CSET'
+v13_cset='REA_BTS34:DCV_D1413:I_CSET'
+h31_cset= 'REA_BTS34:DCH_D1431:I_CSET'
+v31_cset= 'REA_BTS34:DCV_D1431:I_CSET'
+
+h13_ird='REA_BTS34:DCH_D1413:I_RD'
+v13_ird='REA_BTS34:DCV_D1413:I_RD'
+h31_ird='REA_BTS34:DCH_D1431:I_RD'
+v31_ird='REA_BTS34:DCV_D1431:I_RD'
+
 #nmr probes
 set_probe = 'SCR_BTS35:NMR1_D1489:PRB_CSET'
 tlm_reading = 'SCR_BTS35:NMR_N0001:B_RD'
@@ -67,14 +75,8 @@ b2_cycle = 'SCR_BTS35:PSD_D1504:CYCL_CMD'
 b2_iters = caget('SCR_BTS35:PSD_D1504:CYCL_ITERS')
 b2_cpstm = caget('SCR_BTS35:PSD_D1504:CYCL_PSTM')
 
-
 ##########
-##Status##  #should probably complete this later
-
-##Viewer Actions##
-set_image_name= 'SCR_BTS35:VD_D1542:TIFF1:FileName'
-write_image= 'SCR_BTS35:VD_D1542:TIFF1:WriteFile'
-
+#defined functions
 
 def GetQuad(quad):
 
@@ -89,34 +91,17 @@ def SetQuad(quad, current):
 
     return caput(f'SCR_BTS35:PSQ_D{q_loc[quad]}:I_CSET', current, wait= True)
 
-def GetCorr():
 
-    '''Gets the current corrector values'''
-
-    c1= caget(h13_ird)
-    c2= caget(v13_ird)
-    c3= caget(h31_ird)
-    c4= caget(v31_ird)
-    return c1, c2, c3, c4
-
-
-def SetCorr(v1, v2, v3, v4):
-
-    '''Sets the correctors to new values'''
-
-    caput(h13_cset, v1, wait= True)
-    caput(v13_cset, v2, wait= True)
-    caput(h31_cset, v3, wait= True)
-    caput(v31_cset, v4, wait= True)
-    print("Correctors set.")
-
-
-def SaveIm(tunename):
+def SaveIm(tunename, v_loc):
     
-    '''Save viewer image at FP1'''
+    '''Save viewer image named tunename at viewer location v_loc'''
+
+    #Viewer Actions
+    set_image_name = f'SCR_BTS35:VD_{v_loc}:TIFF1:FileName'
+    write_image = f'SCR_BTS35:VD_{v_loc}:TIFF1:WriteFile'
 
     timestring = (datetime.datetime.now()).strftime("%m-%d_%H:%M.%f")
-    filename='D1542'+'_'+tunename+'_'+timestring
+    filename = v_loc +'_'+tunename+'_'+timestring
     caput(set_image_name, filename, wait=True)   #sets image name
     caput(write_image, 1, wait=True)   #saves image
     print(f"Screenshot {tunename} obtained")
@@ -235,6 +220,27 @@ def GetQuads():
     q3= caget(q3_ird)
     q4= caget(q4_ird)
     return q1, q2, q3, q4
+
+def GetCorr():
+
+    '''Gets the current corrector values'''
+
+    c1= caget(h13_ird)
+    c2= caget(v13_ird)
+    c3= caget(h31_ird)
+    c4= caget(v31_ird)
+    return c1, c2, c3, c4
+
+
+def SetCorr(v1, v2, v3, v4):
+
+    '''Sets the correctors to new values'''
+
+    caput(h13_cset, v1, wait= True)
+    caput(v13_cset, v2, wait= True)
+    caput(h31_cset, v3, wait= True)
+    caput(v31_cset, v4, wait= True)
+    print("Correctors set.")
 
 
 

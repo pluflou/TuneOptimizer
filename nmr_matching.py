@@ -1,8 +1,8 @@
 import numpy as np
-import pandas as pd
-from time import *
+from time import sleep
 from epics import caget, caput
-from setup import *
+from setup import cycleB1B2, nmrRange, set_probe, tlm_reading
+from setup import GetMagnet, SetMagnet
 import datetime
 import matplotlib.pyplot as plt
 
@@ -49,8 +49,8 @@ def matchNMR():
         elif (diff > 0.00005):
             dI = 0.01
 
-        b1_i = caget(b1_icset) 
-        b2_i = caget(b2_icset)
+        b1_i = GetMagnet('b1')
+        b2_i = GetMagnet('b2')
 
         if (b1_nmr_h > b2_nmr_h):
             caput(set_probe, b1_probe)
@@ -58,7 +58,7 @@ def matchNMR():
             #decrease b1_nmr_h in small steps until it is dNMR off from b2
 
             # change b1 and compare
-            caput(b1_icset, b1_i - dI, wait = True)
+            SetMagnet('b1', b1_i - dI)
             #saving the new actual nmr value
             sleep(3)
             b1_nmr_h = caget(tlm_reading)
@@ -68,7 +68,7 @@ def matchNMR():
             caput(set_probe, b2_probe)
 
             # change b2 and compare
-            caput(b2_icset, b2_i - dI, wait = True)
+            SetMagnet('b2', b2_i - dI)
             #saving the new actual nmr value
             sleep(3)
             b2_nmr_h = caget(tlm_reading)

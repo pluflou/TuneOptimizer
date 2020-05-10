@@ -5,9 +5,7 @@ import os
 import numpy as np
 from epics import caget, caput, cainfo
 
-#############
-### quads  ##
-q_loc = {
+mag_loc = {
 'q1':'1475',
 'q2':'1479',
 'q3':'1525',
@@ -22,20 +20,15 @@ q_loc = {
 'q12':'1787',
 'q13':'1793',
 'q14':'1842',
-'q15':'1850'
-}
-
-###########
-##dipoles##
-b_loc = {
+'q15':'1850',
 'b1':'1489',
 'b2':'1504',
-'b3':'1525', ###TO BE COMPLETED
-'b4':'1532',
-'b5':'1538',
-'b6':'1572',
-'b7':'1578',
-'b8':'1648',
+'b3':'1547', 
+'b4':'1557',
+'b5':'1665',
+'b6':'1678',
+'b7':'1807',
+'b8':'1826',
 }
 
 #correctors 
@@ -54,42 +47,57 @@ set_probe = 'SCR_BTS35:NMR1_D1489:PRB_CSET'
 tlm_reading = 'SCR_BTS35:NMR_N0001:B_RD'
 lock_status = caget('SCR_BTS35:NMR_N0001:LOCK_RSTS')
 
-#power supplies
-b1_icset = 'SCR_BTS35:PSD_D1489:I_CSET'
-b2_icset = 'SCR_BTS35:PSD_D1504:I_CSET'
 
-b1_ird = 'SCR_BTS35:PSD_D1489:I_RD'
-b2_ird = 'SCR_BTS35:PSD_D1504:I_RD'
-
-#hlc field settings
-b1_bcset = 'SCR_BTS35:DH_D1489:B_CSET'
-b2_bcset = 'SCR_BTS35:DH_D1504:B_CSET'
-b1_brd = 'SCR_BTS35:DH_D1489:B_RD'
-b2_brd = 'SCR_BTS35:DH_D1504:B_RD'
-
-#cycling parameters
-b1_cycle = 'SCR_BTS35:PSD_D1489:CYCL_CMD'
-b1_iters = caget('SCR_BTS35:PSD_D1489:CYCL_ITERS')
-b1_cpstm = caget('SCR_BTS35:PSD_D1489:CYCL_PSTM')
-b2_cycle = 'SCR_BTS35:PSD_D1504:CYCL_CMD'
-b2_iters = caget('SCR_BTS35:PSD_D1504:CYCL_ITERS')
-b2_cpstm = caget('SCR_BTS35:PSD_D1504:CYCL_PSTM')
-
-##########
 #defined functions
+def CycleMagnet(name):
 
-def GetQuad(quad):
+    '''Cycles the given magnet'''
 
-    '''Takes any quad name and returns its current readback value'''
+    if   (name[0] == 'b'):
+        dev = 'PSD'
+    elif (name[0] == 'q'):
+        dev = 'PSQ'
 
-    return caget(f'SCR_BTS35:PSQ_D{q_loc[quad]}:I_RD')
+    cpstm = caget(f'SCR_BTS35:{dev}_D{mag_loc[name]}:CYCL_PSTM')
+    iters = caget(f'SCR_BTS35:{dev}_D{mag_loc[name]}:CYCL_ITERS')
 
+    time = cpstm*iters*2 + 30
+    cycle_cmd = f'SCR_BTS35:{dev}_D{mag_loc[name]}:CYCL_CMD'
 
-def SetQuad(quad, current):
+    caput(cycle_cmd, 1)
+    print(f"Cycling {name}...wait {time/60} minutes")
 
-    '''Takes any quad name and current value and sets the value to the PS'''
+    return time
 
-    return caput(f'SCR_BTS35:PSQ_D{q_loc[quad]}:I_CSET', current, wait= True)
+def GetHall(name):
+
+    '''Gets Hall probe value of given magnet'''
+
+    hall_pv = f'SCR_BTS35:HAL_D{mag_loc[name]}:B_RD'
+
+    return caget(hall_pv)
+
+def GetMagnet(name):
+
+    '''Takes any magnet name and returns its current readback value'''
+
+    if   (name[0] == 'b'):
+        dev = 'PSD'
+    elif (name[0] == 'q'):
+        dev = 'PSQ'
+
+    return caget(f'SCR_BTS35:{dev}_D{mag_loc[name]}:I_RD')
+
+def SetMagnet(name, current):
+
+    '''Takes any magnet name and current value and sets the value to the PS'''
+    
+    if   (name[0] == 'b'):
+        dev = 'PSD'
+    elif (name[0] == 'q'):
+        dev = 'PSQ'
+
+    return caput(f'SCR_BTS35:{dev}_D{mag_loc[name]}:I_CSET', current, wait= True)
 
 
 def SaveIm(tunename, v_loc):
@@ -162,7 +170,7 @@ def nmrRange():
  
     irangeswitch= 43.4 
 
-    b1_current = caget(b1_ird)
+    b1_current = GetMagnet('b1')
 
     print("Checking probe ranges...")
     if (b1_current >= irangeswitch):
@@ -176,38 +184,23 @@ def nmrRange():
 
 def cycleB1B2():
     
-    time = max(b1_cpstm, b2_cpstm)*max(b1_iters, b2_iters)*2 + 30
-    print(f"Cycling...wait {time/60} minutes")
-    caput(b1_cycle, 1)
-    caput(b2_cycle, 1)
-    #this wait time is long enough for the cycling to end and the NMRs to settle
-    sleep(time)
+    time1 = CycleMagnet('b1')
+    time2 = CycleMagnet('b2')
+
+    sleep(np.max([time1, time2]))
 
     print("Done cycling.")
 
-
-### functions that need to be obsolete/updated, only used in beam-optimizer, not general ###
-
-### quads  ##
-q1_cset= 'SCR_BTS35:PSQ_D1475:I_CSET'
-q2_cset= 'SCR_BTS35:PSQ_D1479:I_CSET'
-q3_cset= 'SCR_BTS35:PSQ_D1525:I_CSET'
-q4_cset= 'SCR_BTS35:PSQ_D1532:I_CSET'
-
-##Read currents##
-q1_ird= 'SCR_BTS35:PSQ_D1475:I_RD'
-q2_ird= 'SCR_BTS35:PSQ_D1479:I_RD'
-q3_ird= 'SCR_BTS35:PSQ_D1525:I_RD'
-q4_ird= 'SCR_BTS35:PSQ_D1532:I_RD'
 
 def SetQuads(v1, v2, v3, v4):
 
     '''Set quads to new value'''
 
-    caput(q1_cset, v1, wait= True)
-    caput(q2_cset, v2, wait= True)
-    caput(q3_cset, v3, wait= True)
-    caput(q4_cset, v4, wait= True)
+    SetMagnet('q1', v1)
+    SetMagnet('q2', v2)
+    SetMagnet('q3', v3)
+    SetMagnet('q4', v4)
+
     print("Quads set.")
 
 def GetQuads():
@@ -215,10 +208,10 @@ def GetQuads():
     '''Gets current readback values for the first 4 quads only.
     Initially defined for use with the beam tuner through JENSA'''
 
-    q1= caget(q1_ird)
-    q2= caget(q2_ird)
-    q3= caget(q3_ird)
-    q4= caget(q4_ird)
+    q1= GetMagnet('q1')
+    q2= GetMagnet('q2')
+    q3= GetMagnet('q3')
+    q4= GetMagnet('q4')
     return q1, q2, q3, q4
 
 def GetCorr():

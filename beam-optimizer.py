@@ -3,6 +3,7 @@ import sys, math
 
 import subprocess as commands
 import re
+import random
 import multiprocessing
 import itertools
 import numpy as np
@@ -26,6 +27,7 @@ print("Make sure to delete the past corrector text files.")
 
 theta = input("Enter theta (kernel param): ")
 eps_stable = input("Enter eps (prob. of improvement): ")
+sigma_noise_input = input("Enter sigma for noise: ")
 
 viewer = 'D1542' #when optimizing through JENSA we always use this viewer
 
@@ -36,7 +38,7 @@ ps3 = [-10,10] # Range in Amps for 1431H
 ps4 = [-10,10] # Range in Amps for 1431V 
 
 while (cont == 'y' and count<11):
-	
+	#'''
 	#import current state
 	#Get initial corrector values
 	h13_init, v13_init, h31_init, v31_init= GetCorr()
@@ -48,28 +50,28 @@ while (cont == 'y' and count<11):
 	#take picture with all at init values
 	SetQuads(q1_init, q2_init, 0, 0)
 	sleep(10)
-	all_nom_im= SaveIm('allNom')
+	all_nom_im= SaveIm('allNom', viewer)
 	sleep(2)
 
 	#take picture with all at zero
 	SetQuads(0, 0, 0, 0)
 	pos_1= GetBeamPos(all_nom_im, viewer)
 	sleep(10) #might need to increase this if the jumps in current are big
-	all_zero_im= SaveIm('allZero')
+	all_zero_im= SaveIm('allZero', viewer)
 	sleep(2)
 
 	#take picture with Q1 at half # CHANGED.... Q2 also half
 	SetQuads(q1_init/2, q2_init/2, 0, 0)
 	pos_2= GetBeamPos(all_zero_im, viewer)
 	sleep(10)
-	q1_half_im= SaveIm('q1half')
+	q1_half_im= SaveIm('q1half', viewer)
 	sleep(2)
 	
 	#take picture with Q2 at half # CHANGED... Q1 = 0
 	SetQuads(0, q2_init/2, 0, 0)
 	pos_3= GetBeamPos(q1_half_im, viewer)
 	sleep(10)
-	q2_half_im= SaveIm('q2half')
+	q2_half_im= SaveIm('q2half', viewer)
 	sleep(2)
 	
 	#return quads to original values
@@ -84,6 +86,16 @@ while (cont == 'y' and count<11):
 	pos_2 = pos_2[0:2]
 	pos_3 = pos_3[0:2]
 	pos_4 = pos_4[0:2]
+	#'''
+
+
+	#TESTING
+	#pos_1 = [random.uniform(0,5), random.uniform(5,10)]
+	#pos_2 = [random.uniform(0,6), random.uniform(6,12)]
+	#pos_3 = [random.uniform(0,7), random.uniform(7,14)]
+	#pos_4 = [random.uniform(0,8), random.uniform(8,16)]
+
+
 
 	#get quadratic distance from centroids
 	print("Centroids: ", pos_1, pos_2, pos_3, pos_4)
@@ -94,6 +106,10 @@ while (cont == 'y' and count<11):
 	#save corrector values and distance to file
 	f= open("correctorValues_Distance.txt", "a+")
 	c1, c2, c3, c4= GetCorr()
+
+	#TESTING
+	#c1, c2, c3, c4 = random.uniform(-10,10), random.uniform(-10,10),random.uniform(-10,10),random.uniform(-10,10)
+
 	f.write(f'{c1:.4f}\t{c2:.4f}\t{c3:.4f}\t{c4:.4f}\t{distance:.4f}\n')
 	f.close()
 
@@ -105,14 +121,15 @@ while (cont == 'y' and count<11):
 		count = count + 1
 	
 	####################
-    ####GaussProc######
+	####GaussProc######
 	####################
 
     # Hyper-parameters
 	theta = float(theta) # Kernel parameter
 	eps = float(eps_input) # Acquisition function (probability of improvement) parameter
 	num_points = 100000 # Number of points to sample when using PI to find the next corrector values
-	ps_list = [ps1,ps2,ps3,ps4]
+	sigma2 = float(sigma_noise_input)**2 #squaring the noise term
+	ps_list = [ps1,ps2,ps3,ps4] #phase space for each corrector
 
 	# Reading file with corrector values and measured distance between peaks
 	reader = np.asmatrix(np.loadtxt('correctorValues_Distance.txt'))
@@ -121,26 +138,37 @@ while (cont == 'y' and count<11):
 
 	# Doing GP stuff
 	f_observed = np.transpose(f_observed)  # transform to column 
-	KK = gp.K(x_observed, theta)  # Covariance matrix
+	KK = gp.K(x_observed, theta, sigma2)  # Covariance matrix
 	KInv = np.linalg.inv(KK)   # Inverse of covariance matrix
 	
 	# Removing sampling file from previous step
 	cmd = 'rm -f temp-sampling.txt'
 	failure, output = commands.getstatusoutput(cmd)
+
 	try: 
-		pool = multiprocessing.Pool()  # Take as many processes as possible			
+            pool = multiprocessing.Pool()  # Take as many processes as possible			
 	except: 
-		for c in multiprocessing.active_children():
-			os.kill(c.pid, signal.SIGKILL)
-			pool = multiprocessing.Pool(1)  # Number of processes to be used during PI sampling	
+            for c in multiprocessing.active_children():
+                os.kill(c.pid, signal.SIGKILL)
+                pool = multiprocessing.Pool(1)  # Number of processes to be used during PI sampling
+
 	for j in range(0, int(num_points/250)):
-		pool.apply_async( gp.samplePI, [250, f_observed, x_observed, theta, eps, KInv, ps_list] )
+		pool.apply_async( gp.samplePS, [250, f_observed, x_observed, theta, eps, KInv, ps_list] )
 	pool.close()
 	pool.join()
+
 	PIreader = np.asmatrix(np.loadtxt('temp-sampling.txt'))
 	x = np.transpose(np.asmatrix( PIreader[ np.argmax([ x[:,4] for x in PIreader] ), [0,1,2,3]] ))
 
 	print("New corrector values: ", x)
+
+	x_observed_last = x_observed[:, -1]
+	newdistPoints = gp.distPoints(x_observed_last, x) # calculating distance between points
+
+	print("Theta: {0:.2f}, eps: {1:.2f}, dist. bet. points: {2:.2f}".format(theta, eps, newdistPoints))
+	f = open('results.txt','a') 	# Writing to sampling file best case
+	f.write("{0:.2f} {1:.2f} {2:.2f}\n".format(theta, eps, newdistPoints))
+	f.close()
 
 	#save new corrector values to file
 	f= open("newCorrectorValues.txt", "a+")

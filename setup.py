@@ -42,6 +42,12 @@ v13_ird='REA_BTS34:DCV_D1413:I_RD'
 h31_ird='REA_BTS34:DCH_D1431:I_RD'
 v31_ird='REA_BTS34:DCV_D1431:I_RD'
 
+corr_set_pvs = {'h13': h13_cset,
+		'v13': v13_cset,
+		'h31': h31_cset,
+		'v31': v31_cset
+		}
+
 #nmr probes
 set_probe = 'SCR_BTS35:NMR1_D1489:PRB_CSET'
 tlm_reading = 'SCR_BTS35:NMR_N0001:B_RD'
@@ -64,6 +70,7 @@ def CycleMagnet(name):
     time = cpstm*iters*2 + 30
     cycle_cmd = f'SCR_BTS35:{dev}_D{mag_loc[name]}:CYCL_CMD'
 
+
     caput(cycle_cmd, 1)
     print(f"Cycling {name}...wait {time/60} minutes")
 
@@ -85,7 +92,7 @@ def GetMagnet(name):
         dev = 'PSD'
     elif (name[0] == 'q'):
         dev = 'PSQ'
-
+        
     return caget(f'SCR_BTS35:{dev}_D{mag_loc[name]}:I_RD')
 
 def SetMagnet(name, current):
@@ -101,8 +108,8 @@ def SetMagnet(name, current):
 
 
 def SaveIm(tunename, v_loc):
-    
-    '''Save viewer image named tunename at viewer location v_loc'''
+        
+   '''Save viewer image named tunename at viewer location v_loc'''
 
     #Viewer Actions
     set_image_name = f'SCR_BTS35:VD_{v_loc}:TIFF1:FileName'
@@ -157,7 +164,8 @@ def Dist(p1, p2, p3, p4):
     if dist == 0:
         return 0
     else: 
-        return 1/np.sqrt(dist)
+        return np.sqrt(dist)
+
     
 def GaussProc(eps_input, theta_input):
 
@@ -192,6 +200,18 @@ def cycleB1B2():
     print("Done cycling.")
 
 
+def GetQuads():
+
+    '''Gets current readback values for the first 4 quads only.
+    Initially defined for use with the beam tuner through JENSA'''
+    
+    q1= GetMagnet('q1')
+    q2= GetMagnet('q2')
+    q3= GetMagnet('q3')
+    q4= GetMagnet('q4')    
+    return q1, q2, q3, q4
+
+
 def SetQuads(v1, v2, v3, v4):
 
     '''Set quads to new value'''
@@ -203,16 +223,6 @@ def SetQuads(v1, v2, v3, v4):
 
     print("Quads set.")
 
-def GetQuads():
-
-    '''Gets current readback values for the first 4 quads only.
-    Initially defined for use with the beam tuner through JENSA'''
-
-    q1= GetMagnet('q1')
-    q2= GetMagnet('q2')
-    q3= GetMagnet('q3')
-    q4= GetMagnet('q4')
-    return q1, q2, q3, q4
 
 def GetCorr():
 
@@ -226,7 +236,6 @@ def GetCorr():
 
 
 def SetCorr(v1, v2, v3, v4):
-
     '''Sets the correctors to new values'''
 
     caput(h13_cset, v1, wait= True)

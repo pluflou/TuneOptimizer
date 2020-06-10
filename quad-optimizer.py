@@ -26,8 +26,6 @@ num_points = 1000000  # Number of points considered in phase space sampling
 count = 0
 cont = 'y'
 
-print("Make sure to delete the past quad GP text files.")
-
 quad_list  = input("Enter which quads to optimize (i.e. q2, q3, q4): ").lower()
 viewer     = input("Enter viewer location (i.e. D1542): ").capitalize()
 
@@ -209,6 +207,3 @@ f= open(f"GP_results/{'_'.join(magnet_list)}_gp_results_{timestamp}.txt", "a+")
 f.write('%s' % ' '.join(map('{:.4f}'.format, [q_init[q] for q in magnet_list])) + ' {0:.4f}\n'.format(wid_init))
 f.write('%s' % ' '.join(map('{:.4f}'.format, q_best)) + ' {0:.4f}\n'.format(wid_final))
 f.close()
-
-
-

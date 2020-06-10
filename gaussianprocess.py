@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import random
 import numpy as np
 import matplotlib.pyplot as plt
@@ -206,5 +205,4 @@ def plot2D(filename = 'GP_results/test2.txt', magnet_list = ['h13', 'v13', 'h31'
 
 #evolution()
 #plot1D()
-#plot2D()
 

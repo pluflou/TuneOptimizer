@@ -10,6 +10,7 @@ filename = sys.argv[1]
 #b1 is the "first" dipole and b2 is the "second" dipole of the pair
 
 scan = pd.read_csv(filename, sep='\t', header=None)
+
 scan.columns = ["b1_i", "b2_i", "b1_nmr", "b2_nmr", "dist", "xpos", "im_name"]
 
 avg_nmr = (scan["b1_nmr"] + scan["b2_nmr"])/2
@@ -48,4 +49,6 @@ plt.plot(xp, p(xp), '--', color='green')
 plt.plot(avg_nmr, scan["dist"])
 plt.plot(nmr_min, p(xp).min(), marker = '.', color = 'red', markersize=12)
 plt.savefig(f"{filename[0:2]}_{filename[3:5]}_dipole_scan_fit.png", dpi=300)
+
+
 plt.show() 

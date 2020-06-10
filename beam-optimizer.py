@@ -171,9 +171,6 @@ while (cont == 'y'):
 			caput(corr_set_pvs[m], magnet_values[i], wait= True)
 		print("Correctors set.")
 
-    ####################
-	####################
-
 	#continue or not
 	if (tbl == 'y' or count%5 == 0):
 		cont = input("Continue? y/n ")
@@ -187,5 +184,3 @@ while (cont == 'y'):
 				for i,m in enumerate(magnet_list):
 					caput(corr_set_pvs[m], magnet_values[i], wait= True)
 					print("Correctors set.")
-
-

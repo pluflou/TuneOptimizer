@@ -45,6 +45,10 @@ def distPoints(x_obs_last, x_current):
 
 # Returns mean mu at position x
 def mu( k, KInv, f_observed ):
+    
+    #print("k ", k)
+    #print("KInv ", KInv)
+    #print("fobs ",np.transpose(f_observed))
     return np.transpose(k)*KInv*f_observed
 
 # Returns sigma at position x
@@ -67,38 +71,39 @@ def EI(u, fmax, e, s):
 	
 # Samples the PI/EI over phase space
 def samplePS(num_points, f_obs, x_obs, theta, eps, KInv, ps_par) :
-    fxmax, xmax =  maxObservation(f_obs, x_obs, theta, KInv) #max of observations
+
+    fxmax =  maxObservation(f_obs, x_obs, theta, KInv) #max of observations
+
     PImax = 0
     ps = np.array(ps_par)
     ps_rows = ps.shape[0]
-    
+
     for j in range(0, num_points):
         x_array = []
         # create column matrix from random vals from phase space 
         for k in range(ps_rows): #each row belongs to a device we're tuning
             x_array.append(random.uniform(ps[k][0], ps[k][1]))
 
-        x = np.transpose( np.reshape(x_array, (-1,1)))
-
-
+        x = np.reshape(x_array, (-1,1))
+	
         kk = kf(x[:,0], x_obs, theta) 
         mean = mu( kk, KInv, f_obs)[0,0]
-      
         sigma = sig( kk, KInv)[0,0]
         
         #PIx = PI(mean, fxmax, eps, sigma)
         PIx = EI(mean, fxmax, eps, sigma)
-
+        #print(PIx)
         if (PIx > PImax):
-            
             PImax = PIx
             xPImax = x
 
+    #print("xPImax ", xPImax)
     xPImax_col = np.array(xPImax[:,0]).reshape(-1,1)
-        
+    #print("xPImaxcol ", xPImax_col[0,0], " PImax ",PImax)
+
     f = open('temp-sampling.txt','a') 	# Writing to sampling file best case
     for i in range(ps_rows):
-        f.write('{0:.6f}\t'.format(xPImax_col[0][i]) )
+        f.write('{0:.6f}\t'.format(xPImax_col[i,0]) )
     f.write( '{0: .6f}\n' .format(PImax) )
     f.close()
 
@@ -109,9 +114,9 @@ def maxObservation(f_obs, x_obs, theta, KInv) :
     for i in range(0, num_observations):
         kk = kf( x_obs[:,i], x_obs, theta) 
         mean = mu( kk, KInv, f_obs)[0,0]
-
+        
         if mean > f_max:
             f_max = mean
-            x_max = x_obs[:,i]
-    return f_max, x_max
+            #x_max = x_obs[:,i]
+    return f_max#, x_max
 

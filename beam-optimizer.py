@@ -1,5 +1,6 @@
 import os, shutil, signal
 import sys, math
+import datetime
 
 import subprocess as commands
 import re
@@ -22,8 +23,9 @@ tbl = 'n'
 ## if no in tbl mode this is set to the following eps
 count = 0
 
-##I did not yet implement the printing of the images when it's in tbl mode
-print("Make sure to delete the past corrector text files.")
+##TO DO: I did not yet implement the printing of the images when it's in tbl mode
+#print("Make sure to delete the past corrector text files.") #now labeling results with timestamp
+timestamp = (datetime.datetime.now()).strftime("%m-%d_%H:%M")
 
 theta = input("Enter theta (kernel param): ")
 eps_stable = input("Enter eps (prob. of improvement): ")
@@ -36,6 +38,8 @@ ps1 = [-10,10] # Range in Amps for 1413H
 ps2 = [-10,10] # Range in Amps for 1413V 
 ps3 = [-10,10] # Range in Amps for 1431H 
 ps4 = [-10,10] # Range in Amps for 1431V 
+
+np.set_printoptions(precision=2)
 
 while (cont == 'y' and count<11):
 	#'''
@@ -88,29 +92,17 @@ while (cont == 'y' and count<11):
 	pos_4 = pos_4[0:2]
 	#'''
 
-
-	#TESTING
-	#pos_1 = [random.uniform(0,5), random.uniform(5,10)]
-	#pos_2 = [random.uniform(0,6), random.uniform(6,12)]
-	#pos_3 = [random.uniform(0,7), random.uniform(7,14)]
-	#pos_4 = [random.uniform(0,8), random.uniform(8,16)]
-
-
-
 	#get quadratic distance from centroids
-	print("Centroids: ", pos_1, pos_2, pos_3, pos_4)
+	print(f"Centroids:\n({pos_1[0]:.2f}, {pos_1[1]:.2f})\n({pos_2[0]:.2f}, {pos_2[1]:.2f})\n({pos_3[0]:.2f}, {pos_3[1]:.2f})\n({pos_4[0]:.2f}, {pos_4[1]:.2f})") 
+
 	#print("Peaks: ", pk_1, pk_2, pk_3, pk_4)
 	distance= Dist(pos_1, pos_2, pos_3, pos_4)
-	print("Dist= ", distance)
+	print(f"Dist= {distance:.5f}")
 
 	#save corrector values and distance to file
-	f= open("correctorValues_Distance.txt", "a+")
+	f= open(f"GP_results/correctorValues_Distance_{timestamp}.txt", "a+")
 	c1, c2, c3, c4= GetCorr()
-
-	#TESTING
-	#c1, c2, c3, c4 = random.uniform(-10,10), random.uniform(-10,10),random.uniform(-10,10),random.uniform(-10,10)
-
-	f.write(f'{c1:.4f}\t{c2:.4f}\t{c3:.4f}\t{c4:.4f}\t{distance:.4f}\n')
+	f.write(f'{c1:3.4f}\t{c2:3.4f}\t{c3:3.4f}\t{c4:3.4f}\t{distance:3.4f}\n')
 	f.close()
 
 	#run GP 
@@ -132,7 +124,7 @@ while (cont == 'y' and count<11):
 	ps_list = [ps1,ps2,ps3,ps4] #phase space for each corrector
 
 	# Reading file with corrector values and measured distance between peaks
-	reader = np.asmatrix(np.loadtxt('correctorValues_Distance.txt'))
+	reader = np.asmatrix(np.loadtxt(f'GP_results/correctorValues_Distance_{timestamp}.txt'))
 	x_observed = np.transpose(np.asmatrix(reader[:,[0,1,2,3]]))
 	f_observed = np.transpose(np.asmatrix(reader[:,4]))
 
@@ -160,22 +152,23 @@ while (cont == 'y' and count<11):
 	PIreader = np.asmatrix(np.loadtxt('temp-sampling.txt'))
 	x = np.transpose(np.asmatrix( PIreader[ np.argmax([ x[:,4] for x in PIreader] ), [0,1,2,3]] ))
 
-	print("New corrector values: ", x)
+	print("New corrector values:\n",  np.array_str(x, precision=2))
 
 	x_observed_last = x_observed[:, -1]
 	newdistPoints = gp.distPoints(x_observed_last, x) # calculating distance between points
 
 	print("Theta: {0:.2f}, eps: {1:.2f}, dist. bet. points: {2:.2f}".format(theta, eps, newdistPoints))
-	f = open('results.txt','a') 	# Writing to sampling file best case
+	f = open('GP_results/results_{timestamp}.txt','a') 	# Writing to sampling file best case
 	f.write("{0:.2f} {1:.2f} {2:.2f}\n".format(theta, eps, newdistPoints))
 	f.close()
 
 	#save new corrector values to file
-	f= open("newCorrectorValues.txt", "a+")
+	f= open(f"GP_results/newCorrectorValues_{timestamp}.txt", "a+")
 	c1, c2, c3, c4= float(x[0]), float(x[1]), float(x[2]), float(x[3])
 	f.write(f'{c1} {c2} {c3} {c4}\n')
 	f.close()
-
+	
+	#UNCOMMENT WHEN READY
 	#set new corrector values
 	caput(h13_cset, c1, wait= True)
 	caput(v13_cset, c2, wait= True)

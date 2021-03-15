@@ -1,5 +1,0 @@
-cothread==2.16
-DateTime==4.3
-numpy==1.16.4
-pytz==2019.1
-zope.interface==4.6.0

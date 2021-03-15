@@ -47,11 +47,13 @@ def K(x_observed, theta):
     return np.asmatrix(K) + sigma2*np.identity(num_observations)
 
 # returns distance between the latest observations
+##################################
 def distPoints(x_observed_last, x):
     x1 = np.asarray( x_observed_last ).reshape(-1)
     x2 = np.asarray( x ).reshape(-1)
     dist = np.sqrt(np.dot(x1-x2,x1-x2))     
     return dist 
+########################################
 
 # Returns mean mu at position x
 def mu( k, KInv, f_observed ):
@@ -69,6 +71,7 @@ def sig( k, KInv ):
 def PI(mean, fxmax, eps, sigma):
     return norm.cdf((mean-fxmax-eps)/sigma)
 
+###########################################3
 # Return expectation of improvement
 def EI(mean, fxmax, eps, sigma):
     zz = (mean-fxmax-eps)/sigma
@@ -105,6 +108,7 @@ def maxObservation(theta) :
             fxmax = mean
             xmax = x_observed[:,i]
     return fxmax, xmax
+#######################################
 
 
 # Start of main ------------------------------------------------------------------------------------------------------------
@@ -143,8 +147,11 @@ if __name__ == "__main__":
             reader = np.asmatrix(np.loadtxt('temp-sampling.txt'))
             x = np.transpose(np.asmatrix( reader[ np.argmax([ x[:,4] for x in reader] ), [0,1,2,3]] ))
             x_observed_last = x_observed[:, -1]
-            newdistPoints = distPoints(x_observed_last, x) # calculating distance between points
 
+            #################################################
+            newdistPoints = distPoints(x_observed_last, x) # calculating distance between points
+            #################################################
+            
             print("{0:.2f} {1:.2f} {2:.2f}".format(theta, eps, newdistPoints))
             f = open('results.txt','a') 	# Writing to sampling file best case
             f.write("{0:.2f} {1:.2f} {2:.2f}\n".format(theta, eps, newdistPoints))

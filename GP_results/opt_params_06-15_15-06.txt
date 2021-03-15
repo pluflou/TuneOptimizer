@@ -1,0 +1,22 @@
+
+Name : GP regression
+Objective : 3.4085061128547096
+Number of Parameters : 3
+Number of Optimization Parameters : 3
+Updates : True
+Parameters:
+  GP_regression.           |                value  |  constraints  |   priors  
+  rbf.variance             |  0.35442930793612365  |      +ve      |           
+  rbf.lengthscale          |   10.000000753333786  |               |  N(10, 2) 
+  Gaussian_noise.variance  |   1.0000001847141606  |               |  N(1, 0.5)
+
+Name : GP regression
+Objective : 4.3540216868330255
+Number of Parameters : 3
+Number of Optimization Parameters : 3
+Updates : True
+Parameters:
+  GP_regression.           |                  value  |  constraints  |   priors  
+  rbf.variance             |  2.982120803636408e-08  |      +ve      |           
+  rbf.lengthscale          |     10.000049338042938  |               |  N(10, 2) 
+  Gaussian_noise.variance  |      0.930347690539988  |               |  N(1, 0.5)

@@ -29,6 +29,12 @@ mag_loc = {
 'b6':'1678',
 'b7':'1807',
 'b8':'1826',
+'h1':'1519',
+'h2':'1564',
+'h3':'1614',
+'o1':'1620',
+'t1':'1475',
+'s1':'1475' 
 }
 
 #correctors 
@@ -41,6 +47,12 @@ h13_ird='REA_BTS34:DCH_D1413:I_RD'
 v13_ird='REA_BTS34:DCV_D1413:I_RD'
 h31_ird='REA_BTS34:DCH_D1431:I_RD'
 v31_ird='REA_BTS34:DCV_D1431:I_RD'
+
+corr_set_pvs = {'h13': h13_cset,
+		'v13': v13_cset,
+		'h31': h31_cset,
+		'v31': v31_cset
+		}
 
 #nmr probes
 set_probe = 'SCR_BTS35:NMR1_D1489:PRB_CSET'
@@ -57,6 +69,10 @@ def CycleMagnet(name):
         dev = 'PSD'
     elif (name[0] == 'q'):
         dev = 'PSQ'
+    elif (name[0] == 'h'):
+        dev = 'PSS'
+    elif (name[0] == 'o'):
+        dev = 'PSO'
 
     cpstm = caget(f'SCR_BTS35:{dev}_D{mag_loc[name]}:CYCL_PSTM')
     iters = caget(f'SCR_BTS35:{dev}_D{mag_loc[name]}:CYCL_ITERS')
@@ -81,21 +97,31 @@ def GetMagnet(name):
 
     '''Takes any magnet name and returns its current readback value'''
 
-    if   (name[0] == 'b'):
+    if   (name[0] == 'b' or name[0] == 't'):
         dev = 'PSD'
     elif (name[0] == 'q'):
         dev = 'PSQ'
+    elif (name[0] == 'h' or name[0] == 's'):
+        dev = 'PSS'
+    elif (name[0] == 'o'):
+        dev = 'PSO'
 
-    return caget(f'SCR_BTS35:{dev}_D{mag_loc[name]}:I_RD')
+    #~ return caget(f'SCR_BTS35:{dev}_D{mag_loc[name]}:I_RD')
+    #changed to read the setpoint because the difference between set and read makes the matching impossible sometimes
+    return caget(f'SCR_BTS35:{dev}_D{mag_loc[name]}:I_CSET')
 
 def SetMagnet(name, current):
 
     '''Takes any magnet name and current value and sets the value to the PS'''
     
-    if   (name[0] == 'b'):
+    if   (name[0] == 'b' or name[0] == 't'):
         dev = 'PSD'
     elif (name[0] == 'q'):
         dev = 'PSQ'
+    elif (name[0] == 'h' or name[0] == 's'):
+        dev = 'PSS'
+    elif (name[0] == 'o'):
+        dev = 'PSO'
 
     return caput(f'SCR_BTS35:{dev}_D{mag_loc[name]}:I_CSET', current, wait= True)
 
@@ -133,31 +159,42 @@ def GetBeamPos(imname, v_loc):
     x_nsig= data[8]
     x_psig= data[9]
 
-    return x_centroid, y_centroid, x_peak, y_peak, x_nsig, x_psig
+    y_nsig= data[10]
+    y_psig= data[11]
 
-def Dist(p1, p2, p3, p4):
+    return x_centroid, y_centroid, x_peak, y_peak, x_nsig, x_psig, y_nsig, y_psig
+
+def Dist(p1, p2, p3, p4, separateXY = False):
 
     '''Get quadratic distance between the 4 centroids (mm)'''
 
-    meas_num= 12
+    meas_num_per_axis = 6
     x1, y1, x2, y2, x3, y3, x4, y4= p1[0], p1[1], p2[0], p2[1], p3[0], p3[1], p4[0], p4[1]
-    dist= 1/meas_num * (np.power((x1-x2),2)
-                      + np.power((y1-y2),2)
+
+    x_dist= 1/meas_num_per_axis * (np.power((x1-x2),2)
                       + np.power((x1-x3),2) 
-                      + np.power((y1-y3),2) 
                       + np.power((x1-x4),2) 
-                      + np.power((y1-y4),2)
 		              + np.power((x2-x4),2) 
-                      + np.power((y2-y4),2)
 		              + np.power((x3-x4),2) 
-                      + np.power((y3-y4),2)
 		              + np.power((x2-x3),2) 
+                       )
+
+    y_dist= 1/meas_num_per_axis * (np.power((y1-y2),2)
+                      + np.power((y1-y3),2) 
+                      + np.power((y1-y4),2)
+                      + np.power((y2-y4),2)
+                      + np.power((y3-y4),2)
                       + np.power((y2-y3),2)
                        )
+    
+    dist = (x_dist + y_dist)/2
+
     if dist == 0:
         return 0
+    if separateXY == True:
+        return np.sqrt(x_dist), np.sqrt(y_dist)
     else: 
-        return 1/np.sqrt(dist)
+        return np.sqrt(dist)
     
 def GaussProc(eps_input, theta_input):
 
@@ -214,26 +251,7 @@ def GetQuads():
     q4= GetMagnet('q4')
     return q1, q2, q3, q4
 
-def GetCorr():
 
-    '''Gets the current corrector values'''
-
-    c1= caget(h13_ird)
-    c2= caget(v13_ird)
-    c3= caget(h31_ird)
-    c4= caget(v31_ird)
-    return c1, c2, c3, c4
-
-
-def SetCorr(v1, v2, v3, v4):
-
-    '''Sets the correctors to new values'''
-
-    caput(h13_cset, v1, wait= True)
-    caput(v13_cset, v2, wait= True)
-    caput(h31_cset, v3, wait= True)
-    caput(v31_cset, v4, wait= True)
-    print("Correctors set.")
 
 
 

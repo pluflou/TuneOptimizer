@@ -1,0 +1,55 @@
+
+Name : GP regression
+Objective : 2.7901372814034975
+Number of Parameters : 3
+Number of Optimization Parameters : 3
+Updates : True
+Parameters:
+  GP_regression.           |                   value  |  constraints  |   priors  
+  rbf.variance             |  4.1871663372995314e-08  |      +ve      |           
+  rbf.lengthscale          |       9.999997222399134  |               |  N(10, 2) 
+  Gaussian_noise.variance  |      0.8770538171487886  |               |  N(1, 0.5)
+
+Name : GP regression
+Objective : 3.582753844474261
+Number of Parameters : 3
+Number of Optimization Parameters : 3
+Updates : True
+Parameters:
+  GP_regression.           |                  value  |  constraints  |   priors  
+  rbf.variance             |  4.101861019461845e-07  |      +ve      |           
+  rbf.lengthscale          |     10.000003410287299  |               |  N(10, 2) 
+  Gaussian_noise.variance  |     0.6520625047035583  |               |  N(1, 0.5)
+
+Name : GP regression
+Objective : 8.623680607203802
+Number of Parameters : 3
+Number of Optimization Parameters : 3
+Updates : True
+Parameters:
+  GP_regression.           |               value  |  constraints  |   priors  
+  rbf.variance             |  4.3934383870402405  |      +ve      |           
+  rbf.lengthscale          |   9.981128864975648  |               |  N(10, 2) 
+  Gaussian_noise.variance  |  1.0003691849051886  |               |  N(1, 0.5)
+
+Name : GP regression
+Objective : 9.925636308394896
+Number of Parameters : 3
+Number of Optimization Parameters : 3
+Updates : True
+Parameters:
+  GP_regression.           |               value  |  constraints  |   priors  
+  rbf.variance             |   5.233966237557386  |      +ve      |           
+  rbf.lengthscale          |    9.98065535689586  |               |  N(10, 2) 
+  Gaussian_noise.variance  |  0.8291096045640061  |               |  N(1, 0.5)
+
+Name : GP regression
+Objective : 21.16947026377349
+Number of Parameters : 3
+Number of Optimization Parameters : 3
+Updates : True
+Parameters:
+  GP_regression.           |               value  |  constraints  |   priors  
+  rbf.variance             |  1.5063318527156573  |      +ve      |           
+  rbf.lengthscale          |  1.6989737409878356  |               |  N(10, 2) 
+  Gaussian_noise.variance  |  0.9659394589858032  |               |  N(1, 0.5)

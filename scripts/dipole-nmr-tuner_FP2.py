@@ -5,7 +5,7 @@ from setup import GetBeamPos, SaveIm, GetQuads, SetQuads, nmrRange, Dist, cycleB
 from setup import set_probe, tlm_reading, GetMagnet, SetMagnet
 import datetime
 
-viewer = 'D1783'
+viewer = 'D1638'
 #start by setting the dipoles to a high current to be a the right edge of the viewer
 
 #check which probe range to use
@@ -13,7 +13,7 @@ b1_probe, b2_probe = nmrRange()
 
 #cycle
 cycleB1B2()
-#~ #need to make sure NMRs have settled otherwise we cannot match the NMR readings
+#need to make sure NMRs have settled otherwise we cannot match the NMR readings
 cont= input("Once NMRs have settled, enter 'y' to continue...")
 
 if (cont != 'y'):
@@ -35,7 +35,7 @@ def matchNMR():
     b2_nmr_h = caget(tlm_reading)
 
     #using the nmr readback and the i_cset, slowly ramp down as you check that the nmrs are close
-    dNMR = 0.00001
+    dNMR = 0.0002
 
     print("Beginning matching...")
     while ( abs(b1_nmr_h - b2_nmr_h) > dNMR):
@@ -47,9 +47,8 @@ def matchNMR():
             dI = 0.1
 
         elif (diff > 0.00005):
-            dI = 0.02  # Changed from 0.01 since this is sometimes the difference between set and RD
-
-        b1_i = GetMagnet('b1')
+            dI = 0.01  
+        b1_i = GetMagnet('b1') 
         b2_i = GetMagnet('b2')
 
         if (b1_nmr_h > b2_nmr_h):
@@ -60,7 +59,7 @@ def matchNMR():
             # change b1 and compare
             SetMagnet('b1', b1_i - dI)
             #saving the new actual nmr value
-            sleep(3)
+            sleep(6)
             b1_nmr_h = caget(tlm_reading)
 
         elif (b1_nmr_h < b2_nmr_h):
@@ -70,7 +69,7 @@ def matchNMR():
             # change b2 and compare
             SetMagnet('b2', b2_i - dI)
             #saving the new actual nmr value
-            sleep(3)
+            sleep(6)
             b2_nmr_h = caget(tlm_reading)
     
         print(f"Fields: {b1_nmr_h:.6f}, {b2_nmr_h:.6f}, dNMR: {((b1_nmr_h - b2_nmr_h)/b1_nmr_h*100):.5f}%")
@@ -91,7 +90,7 @@ atTune = False
 while (atTune == False):
  
     #using the nmr readback and the i_cset, slowly ramp down as you check that the nmrs are close
-    dNMR = 0.00001
+    dNMR = 0.0002
    #get Is of dipoles (reproducible)
     b1_i = GetMagnet('b1') 
     b2_i = GetMagnet('b2')
@@ -121,6 +120,7 @@ while (atTune == False):
     
 #compare current dist with previous, once I pass the min, stop, set back to Imin, cycle
     q1_init, q2_init, q3_init, q4_init= GetQuads()
+    q5_init = GetMagnet('q5')
 
     #Tuning Q3 and Q4
     #take picture with all at init values
@@ -129,26 +129,28 @@ while (atTune == False):
     all_nom_im= SaveIm('allNom', viewer)
 
     #take picture with all at zero
-    SetQuads(q1_init, q2_init, q3_init, -90)
+    SetQuads(q1_init, q2_init, 90, q4_init)
     pos_1= GetBeamPos(all_nom_im, viewer)
     sleep(5) #might need to increase this if the jumps in current are big
-    all_zero_im= SaveIm('Q4_neg90', viewer)
+    q3_90_im= SaveIm('q3_90', viewer)
 
     #take picture with Q3 at half
-    SetQuads(q1_init, q2_init, q3_init*2/3, q4_init)
-    pos_2= GetBeamPos(all_zero_im, viewer)
+    SetQuads(q1_init, q2_init, q3_init, -90)
+    pos_2= GetBeamPos(q3_90_im, viewer)
     sleep(5)
-    q3_half_im= SaveIm('q3_2-3', viewer)
+    q4_90_im= SaveIm('q4_90', viewer)
 
     #take picture with Q2 at half
-    SetQuads(q1_init, q2_init, q3_init, q4_init*2/3)
-    pos_3= GetBeamPos(q3_half_im, viewer)
+    SetQuads(q1_init, q2_init, q3_init, q4_init)
+    SetMagnet('q5', 50)
+    pos_3= GetBeamPos(q3_90_im, viewer)
     sleep(5)
-    q4_half_im= SaveIm('q4_2-3', viewer)
+    q5_50_im= SaveIm('q5_50', viewer)
 
     #return quads to original values
     SetQuads(q1_init, q2_init, q3_init, q4_init)
-    pos_4= GetBeamPos(q4_half_im, viewer)
+    SetMagnet('q5', q5_init)
+    pos_4= GetBeamPos(q5_50_im, viewer)
 
     pk_1 = pos_1[2:]
     pk_2 = pos_2[2:]

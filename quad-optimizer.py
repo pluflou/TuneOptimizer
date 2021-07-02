@@ -1,4 +1,4 @@
-import os, shutil, signal
+import os, shutil, signal, re
 import sys, math
 import warnings
 import datetime
@@ -21,7 +21,7 @@ from setup import GetBeamPos, GetMagnet, SetMagnet, SaveIm
 
 ## if in troubleshoot mode you can change the eps at every step
 tbl = 'n'
-sandbox = 'n' # if 'y' uses madeup function
+sandbox = 'y' # if 'y' uses madeup function
 num_points = 1000000  # Number of points considered in phase space sampling
 count = 0
 cont = 'y'
@@ -146,7 +146,7 @@ while (cont == 'y'):
 	#print(f_observed)
 	# Use GP regression to fit the data
 	X_grid = gp.x_grid_func(num_points, space)
-	k = GPy.kern.RBF(input_dim=len(magnet_list))   # Choice of Kernel!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	k = GPy.kern.RBF(input_dim=len(magnet_list), ARD=True)   # Choice of Kernel!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	m = GPy.models.GPRegression(x_observed, f_observed, k)
 	
 	m.kern.lengthscale.unconstrain_positive()
@@ -157,7 +157,7 @@ while (cont == 'y'):
 	m.Gaussian_noise.variance.set_prior(GPy.priors.Gaussian(3,3))
 
 	m.optimize('bfgs', max_iters=100)  # Hyper-parameters are optimized here
-	print(m)
+	print(m.kern.lengthscale)
 
 	f = open(f"GP_results/opt_params_{timestamp}.txt", "a+")
 	ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
